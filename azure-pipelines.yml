@@ -1,22 +1,25 @@
 name: build-$(Build.BuildId)-date-$(Date:yyyy-MM-dd)
-steps:
-- powershell: |
-    Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -Verbose
-  displayName: 'Install-Module Pester'
-- task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
-  displayName: 'Invoke-Pester'
-  inputs:
-    scriptFolder: ./test/*
-    resultsFile: $(System.DefaultWorkingDirectory)/TEST-pester-$(Build.BuildNumber).xml
-    CodeCoverageFolder: ./src
-    CodeCoverageOutputFile: $(System.DefaultWorkingDirectory)/COVERAGE-pester-$(Build.BuildNumber).jacoco.summary
-  continueOnError: true
-- task: PublishTestResults@2
-  displayName: Publish Test Results
-  inputs:
-    testResultFormat: NUnit
-- task: PublishCodeCoverageResults@1
-  displayName: Publish Code Coverage Results
-  inputs:
-    reportDirectory: ./src
-    summaryFileLocation: $(System.DefaultWorkingDirectory)/COVERAGE-pester-$(Build.BuildNumber).jacoco.summary
+jobs:
+  - job: PowerShell Pester Test Runner
+    pool: Hosted VS2017
+    steps:
+    - powershell: |
+        Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -Verbose
+      displayName: 'Install-Module Pester'
+    - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
+      displayName: 'Invoke-Pester'
+      inputs:
+        scriptFolder: ./test/*
+        resultsFile: $(System.DefaultWorkingDirectory)/TEST-pester-$(Build.BuildNumber).xml
+        CodeCoverageFolder: ./src
+        CodeCoverageOutputFile: $(System.DefaultWorkingDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
+      continueOnError: true
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      inputs:
+        testResultFormat: NUnit
+    - task: PublishCodeCoverageResults@1
+      displayName: Publish Code Coverage Results
+      inputs:
+        reportDirectory: ./src
+        summaryFileLocation: $(System.DefaultWorkingDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
