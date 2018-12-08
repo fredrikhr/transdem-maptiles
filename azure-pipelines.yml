@@ -7,7 +7,7 @@ jobs:
       displayName: 'Invoke-Pester'
       inputs:
         targetType: filePath
-        filePath: ./'$(Build.SourcesDirectory)/scripts/run-pester.ps1'
+        filePath: '$(Build.SourcesDirectory)/scripts/run-pester.ps1'
         arguments: '-Verbose'
         errorActionPreference: stop
       continueOnError: true
