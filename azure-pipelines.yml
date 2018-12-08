@@ -3,7 +3,7 @@ steps:
 - powershell: |
     Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -Verbose
   displayName: 'Install-Module Pester'
-- task: Pester
+- task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
   displayName: 'Invoke-Pester'
   inputs:
     scriptFolder: ./test/*
