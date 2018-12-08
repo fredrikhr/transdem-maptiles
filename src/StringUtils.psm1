@@ -22,6 +22,7 @@ function Get-Lines {
     [OutputType([string[]])]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)]
+        [AllowNull()][AllowEmptyString()]
         [string]$Value,
         [Parameter()]
         [switch]$Trim,

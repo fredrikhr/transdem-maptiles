@@ -1,8 +1,8 @@
-Import-Module (Join-Path (Join-Path $PSScriptRoot "..") "Couven92.PowerShell.StringUtils")
+Import-Module (Join-Path $PSScriptRoot "StringUtils.psm1")
 
-function Get-CoordinatePairAsHashTable {
+function Get-CoordinatePair {
     [CmdletBinding()]
-    [OutputType([hashtable])]
+    [OutputType([PSCustomObject])]
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
         [ValidateNotNullOrEmpty()]
@@ -20,40 +20,13 @@ function Get-CoordinatePairAsHashTable {
         $latString = $Value.Substring($commaIdx + 1)
         [double]$degreesLongitude = [double]::Parse($lonString, $invariant)
         [double]$degreesLatitude = [double]::Parse($latString, $invariant)
-        @{
+        [PSCustomObject]@{
             DegreesLongitude = $degreesLongitude
             DegreesLatitude = $degreesLatitude
         }
     }
 }
-
-function Get-CoordinatePair {
-    [CmdletBinding()]
-    [OutputType([PSCustomObject])]
-    param (
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
-        [ValidateNotNullOrEmpty()]
-        [string]$Value
-    )
-    process {
-        [PSCustomObject](Get-CoordinatePairAsHashTable -value $Value)
-    }
-}
-
-function Get-XmlNodesFromNodeList {
-    [CmdletBinding()]
-    [OutputType([System.Xml.XmlNode[]])]
-    param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
-        [System.Xml.XmlNodeList]$NodeList
-    )
-
-    process {
-        foreach ($item in $NodeList) {
-            $item
-        }
-    }
-}
+Export-ModuleMember -Function Get-CoordinatePair
 
 function Get-PathFromPlacemarkNode {
     [CmdletBinding()]
@@ -86,24 +59,20 @@ function Get-AllPathsFromKml {
         [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [Alias("PSPath")]
         [ValidateNotNullOrEmpty()]
-        [ValidateScript({
-            if (Test-Path $_ -PathType Leaf) {
-                $true
-             } else {
-                throw "Cannot find path '$_' because it is not a path to a file or because it does not exist."
-             }
-        })]
         [string]$KmlPath
     )
     process {
-        [xml]$kmlXml = Get-Content $KmlPath
+        $kmlItem = Get-Item $KmlPath
+        [xml]$kmlXml = $kmlItem | Get-Content
         $nodes = $kmlXml.SelectNodes("/kml/Document/Folder/Placemark")
         if ($nodes.Count -lt 1) {
             Write-Warning "KML file '$_' does not contain any placemark XML nodes."
             return
         }
 
-        $nodes | Get-XmlNodesFromNodeList | Get-PathFromPlacemarkNode
+        foreach ($item in $NodeList) {
+            $item | Get-PathFromPlacemarkNode
+        }
     }
 }
 Export-ModuleMember -Function Get-AllPathsFromKml

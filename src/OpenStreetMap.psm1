@@ -1,3 +1,5 @@
+Import-Module (Join-Path $PSScriptRoot "WebMercator.psm1")
+
 function Select-OpenStreetMapSubDomain {
     [CmdletBinding()]
     [OutputType([string])]

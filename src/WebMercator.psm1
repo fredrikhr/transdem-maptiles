@@ -1,5 +1,5 @@
-Import-Module (Join-Path (Join-Path $PSScriptRoot "..") "Couven92.PowerShell.MathUtils")
-Import-Module (Join-Path (Join-Path $PSScriptRoot "..") "Couven92.PowerShell.Bresenham")
+Import-Module (Join-Path $PSScriptRoot "Bresenham.psm1")
+Import-Module (Join-Path $PSScriptRoot "TrigonometryUtils.psm1")
 
 $MaxRadiansLatitude = [Math]::Atan([Math]::Sinh([Math]::PI))
 $MinRadiansLatitude = -$MaxRadiansLatitude
