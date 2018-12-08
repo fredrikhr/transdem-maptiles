@@ -2,15 +2,17 @@ name: build-$(Build.BuildId)-date-$(Date:yyyy-MM-dd)
 jobs:
   - job: PowerShellPesterJob
     displayName: PowerShell Pester Test Runner
-    pool: Hosted VS2017
     steps:
-    - powershell: ./'$(Build.SourcesDirectory)/scripts/run-pester.ps1'
-      arguments: '-Verbose'
+    - task: PowerShell@2
       displayName: 'Invoke-Pester'
-      errorActionPreference: stop
+      inputs:
+        targetType: filePath
+        filePath: ./'$(Build.SourcesDirectory)/scripts/run-pester.ps1'
+        arguments: '-Verbose'
+        errorActionPreference: stop
       continueOnError: true
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
-        testResultsFiles: $(Common.TestResultsDirectory)\TEST-pester-$(Build.BuildNumber).xml
+        testResultsFiles: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
         testResultFormat: NUnit
