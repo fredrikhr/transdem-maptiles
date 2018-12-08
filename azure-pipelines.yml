@@ -1,6 +1,7 @@
 name: build-$(Build.BuildId)-date-$(Date:yyyy-MM-dd)
 jobs:
-  - job: PowerShell Pester Test Runner
+  - job: PowerShellPesterJob
+    displayName: PowerShell Pester Test Runner
     pool: Hosted VS2017
     steps:
     - powershell: |
