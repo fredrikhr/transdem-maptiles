@@ -4,24 +4,13 @@ jobs:
     displayName: PowerShell Pester Test Runner
     pool: Hosted VS2017
     steps:
-    - powershell: |
-        Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser -Verbose
-      displayName: 'Install-Module Pester'
-    - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
+    - powershell: ./'$(Build.SourcesDirectory)/scripts/run-pester.ps1'
+      arguments: '-Verbose'
       displayName: 'Invoke-Pester'
-      inputs:
-        scriptFolder: $(Build.SourcesDirectory)/test/*
-        resultsFile: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
-        CodeCoverageFolder: $(Build.SourcesDirectory)/src
-        CodeCoverageOutputFile: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
+      errorActionPreference: stop
       continueOnError: true
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
-        testResultsFiles: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
+        testResultsFiles: $(Common.TestResultsDirectory)\TEST-pester-$(Build.BuildNumber).xml
         testResultFormat: NUnit
-    - task: PublishCodeCoverageResults@1
-      displayName: Publish Code Coverage Results
-      inputs:
-        reportDirectory: $(Build.SourcesDirectory)/src
-        summaryFileLocation: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
