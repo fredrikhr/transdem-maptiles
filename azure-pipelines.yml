@@ -1,5 +1,5 @@
 name: build-$(Build.BuildId)-date-$(Date:yyyy-MM-dd)
 steps:
 - powershell: |
-    Install-Module -Name Pester -Force -SkipPublisherCheck
+    Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
   displayName: 'Install-Module Pester'
