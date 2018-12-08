@@ -10,17 +10,18 @@ jobs:
     - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
       displayName: 'Invoke-Pester'
       inputs:
-        scriptFolder: ./test/*
-        resultsFile: $(System.DefaultWorkingDirectory)/TEST-pester-$(Build.BuildNumber).xml
-        CodeCoverageFolder: ./src
-        CodeCoverageOutputFile: $(System.DefaultWorkingDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
+        scriptFolder: $(Build.SourcesDirectory)/test/*
+        resultsFile: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
+        CodeCoverageFolder: $(Build.SourcesDirectory)/src
+        CodeCoverageOutputFile: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
       continueOnError: true
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
+        testResultsFiles: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
         testResultFormat: NUnit
     - task: PublishCodeCoverageResults@1
       displayName: Publish Code Coverage Results
       inputs:
-        reportDirectory: ./src
-        summaryFileLocation: $(System.DefaultWorkingDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
+        reportDirectory: $(Build.SourcesDirectory)/src
+        summaryFileLocation: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
