@@ -7,6 +7,61 @@ $MinRadiansLatitude = -$MaxRadiansLatitude
 $MaxDegreesLatitude = Convert-RadiansToDegrees $MaxRadiansLatitude
 $MinDegreesLatitude = Convert-RadiansToDegrees $MinRadiansLatitude
 
+function Add-MapTileAliasMembers {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [PSCustomObject]$Tile,
+        [Parameter()]
+        [switch]$Force,
+        [Parameter()]
+        [switch]$PassThru
+    )
+    process {
+        $Tile | Add-Member -MemberType AliasProperty `
+            -Name X -Value TileX -Force:$Force
+        $Tile | Add-Member -MemberType AliasProperty `
+            -Name Y -Value TileY -Force:$Force
+        $Tile | Add-Member -MemberType AliasProperty `
+            -Name Z -Value ZoomLevel -Force:$Force
+        if (-not (Get-Member -InputObject $Tile TileName)) {
+            $Tile | Add-Member -MemberType NoteProperty `
+                -Name TileName -Value ($Tile | Get-MapTileName)
+        }
+        $Tile | Add-Member -MemberType AliasProperty `
+            -Name Name -Value TileName -Force:$Force
+        if ($PassThru) {
+            $Tile
+        }
+    }
+}
+
+function New-MapTileObject {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
+        [ValidateRange(0, 22)]
+        [Alias("Z")]
+        [int]$ZoomLevel,
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
+        [Alias("X")]
+        [int]$TileX,
+        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Y")]
+        [int]$TileY
+    )
+    process {
+        $tile = [PSCustomObject]@{
+            TileX = $TileX
+            TileY = $TileY
+            ZoomLevel = $ZoomLevel
+        }
+        Add-MapTileAliasMembers $tile -PassThru
+    }
+}
+Export-ModuleMember -Function New-MapTileObject
+
 function Get-MapTileName {
     [CmdletBinding()]
     [OutputType([string])]
@@ -33,20 +88,6 @@ function Get-MapTileName {
     }
 }
 Export-ModuleMember -Function Get-MapTileName
-
-function Add-MapTileNameMember {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
-        [ValidateNotNull()]
-        [PSCustomObject]$TileReference
-    )
-    process {
-        $name = $TileReference | Get-MapTileName
-        $TileReference | Add-Member @{ TileName = $name }
-    }
-}
-Export-ModuleMember -Function Add-MapTileNameMember
 
 function Get-MapTileFromPoint {
     [CmdletBinding()]
@@ -92,10 +133,10 @@ function Get-MapTileFromPoint {
     }
     process {
         if (-not $RadiansLatitude) {
-            $RadiansLatitude = Convert-DegreesToRadians $DegreesLatitude -ErrorAction Stop
+            $RadiansLatitude = Convert-DegreesToRadians $DegreesLatitude
         }
         if (-not $DegreesLongitude) {
-            $DegreesLongitude = Convert-RadiansToDegrees $RadiansLongitude -ErrorAction Stop
+            $DegreesLongitude = Convert-RadiansToDegrees $RadiansLongitude
         }
         if ($PreZoomLevel -eq $ZoomLevel) {
             [double]$ConstN = $Pre2PowZoom
@@ -106,12 +147,7 @@ function Get-MapTileFromPoint {
         $xtile = [Math]::Floor(($DegreesLongitude + 180.0) / 360.0 * $ConstN)
         $ytile = ([Math]::Floor((1.0 - [Math]::Log([Math]::Tan($RadiansLatitude) + (1.0 / [Math]::Cos($RadiansLatitude))) / [Math]::PI) / 2.0 * $ConstN))
 
-        [PSCustomObject]@{
-            ZoomLevel = $ZoomLevel
-            TileX = $xtile
-            TileY = $ytile
-            TileName = Get-MapTileName -ZoomLevel $ZoomLevel -TileX $xtile -TileY $ytile
-        }
+        New-MapTileObject -ZoomLevel $ZoomLevel -TileX $xtile -TileY $ytile
     }
 }
 Export-ModuleMember -Function Get-MapTileFromPoint
@@ -124,7 +160,11 @@ function Add-MapTileMembers {
         [int]$ZoomLevel,
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [ValidateNotNull()]
-        [PSCustomObject]$Point
+        [PSCustomObject]$Point,
+        [Parameter()]
+        [switch]$Force,
+        [Parameter()]
+        [switch]$PassThru
     )
     process {
         $tile = $Point | Get-MapTileFromPoint -ZoomLevel $ZoomLevel
@@ -133,6 +173,10 @@ function Add-MapTileMembers {
             TileX = $tile.TileX
             TileY = $tile.TileY
             TileName = $tile.TileName
+        } -Force:$Force
+        Add-MapTileAliasMembers $Point -Force:$Force
+        if ($PassThru) {
+            $Point
         }
     }
 }
@@ -183,6 +227,7 @@ function Get-MapTilesAlongPath {
         $bresenhamTiles = $bresenhamPaths.ToArray() | Get-BresenhamLineCoordinates `
             -UsedCoordinates $UsedCoordinates
         foreach ($item in $bresenhamTiles) {
+
             [PSCustomObject]@{
                 ZoomLevel = $ZoomLevel
                 TileX = $item.X
