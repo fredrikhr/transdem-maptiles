@@ -4,7 +4,10 @@ param ()
 $pesterTestPath = Join-Path (Join-Path $PSScriptRoot "..") "test"
 $pesterTestPath = Join-Path $pesterTestPath "*"
 
-$outputFileName = "TEST-date-$dateString-t-$timeString-Z.xml"
+$dtNow = [datetime]::UtcNow
+$dateString = $dtNow.ToString("yyyy'-'MM'-'dd")
+$timeString = $dtNow.ToString("HH'-'mm'-'ss")
+$outputFileName = "TEST-date-$dateString-utc-$timeString.xml"
 $outputDirectory = Join-Path (Join-Path $PSScriptRoot "..") "TestResult"
 if (-not (Test-Path $outputDirectory)) {
     New-Item -ItemType Directory $outputDirectory | Out-Null
