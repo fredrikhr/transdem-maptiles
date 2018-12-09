@@ -1,4 +1,4 @@
-Import-Module Pester
+Import-Module Pester -Verbose:$false
 Import-Module (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "src") "StringUtils.psm1")
 
 Describe "Get-Lines" {
