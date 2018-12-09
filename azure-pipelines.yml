@@ -14,5 +14,6 @@ jobs:
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
-        testResultsFiles: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
+        searchFolder: $(Common.TestResultsDirectory)
+        testResultsFiles: TEST-pester-$(Build.BuildNumber).xml
         testResultFormat: NUnit
