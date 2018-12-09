@@ -2,18 +2,37 @@ name: build-$(Build.BuildId)-date-$(Date:yyyy-MM-dd)
 jobs:
   - job: PowerShellPesterJob
     displayName: PowerShell Pester Test Runner
+    pool: Hosted VS2017
     steps:
-    - task: PowerShell@2
+    - powershell: |
+        Import-Module Pester
+        $pesterModule = Get-Module Pester
+        if ($pesterModule.Version -lt [version]::Parse("4.0")) {
+            Install-Module -Name Pester -Verbose -Force -SkipPublisherCheck -Scope CurrentUser
+            Import-Module Pester -Force; }
+      displayName: 'Install-Module Pester'
+    - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
       displayName: 'Invoke-Pester'
       inputs:
-        targetType: filePath
-        filePath: '$(Build.SourcesDirectory)/scripts/run-pester.ps1'
-        arguments: '-Verbose'
-        errorActionPreference: stop
+        scriptFolder: $(Build.SourcesDirectory)/test/*
+        resultsFile: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
+        CodeCoverageFolder: $(Build.SourcesDirectory)/src
+        CodeCoverageOutputFile: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
       continueOnError: true
+    - powershell: |
+        'Get-ChildItem -File -Recurse $Env:COMMON_TESTRESULTSDIRECTORY'
+      displayName: Enumerate Test Result Files
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
         searchFolder: $(Common.TestResultsDirectory)
-        testResultsFiles: TEST-pester-$(Build.BuildNumber).xml
-        testResultFormat: NUnit
+        testRunTitle: $(Build.BuildNumber)
+        testResultsFiles: '**/TEST-*.xml'
+        testResultsFormat: NUnit
+        buildPlatform: $(Agent.OS)-$(Agent.OSArchitecture)
+        buildConfiguration: $(Build.DefinitionName)
+    - task: PublishCodeCoverageResults@1
+      displayName: Publish Code Coverage Results
+      inputs:
+        reportDirectory: $(Build.SourcesDirectory)/src
+        summaryFileLocation: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
