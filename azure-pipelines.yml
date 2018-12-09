@@ -19,9 +19,6 @@ jobs:
         CodeCoverageFolder: $(Build.SourcesDirectory)/src
         CodeCoverageOutputFile: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
       continueOnError: true
-    - powershell: |
-        'Get-ChildItem -File -Recurse $Env:COMMON_TESTRESULTSDIRECTORY'
-      displayName: Enumerate Test Result Files
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
@@ -34,5 +31,5 @@ jobs:
     - task: PublishCodeCoverageResults@1
       displayName: Publish Code Coverage Results
       inputs:
-        reportDirectory: $(Build.SourcesDirectory)/src
+        codeCoverageTool: JaCoCo
         summaryFileLocation: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
