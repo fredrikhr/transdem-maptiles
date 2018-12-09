@@ -1,5 +1,5 @@
 Import-Module Pester -Verbose:$false
-Import-Module (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "src") "TrigonometryUtils.psm1")
+Import-Module (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "src") "TrigonometryUtils.psm1") -Force
 
 Describe "Convert-DegreesToRadians" {
     $examples = @(

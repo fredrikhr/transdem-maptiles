@@ -1,5 +1,5 @@
 Import-Module Pester -Verbose:$false
-Import-Module (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "src") "StringUtils.psm1")
+Import-Module (Join-Path (Join-Path (Join-Path $PSScriptRoot "..") "src") "StringUtils.psm1") -Force
 
 Describe "Get-Lines" {
     It "Returns 1 non-empty string if given a single-line string" {
