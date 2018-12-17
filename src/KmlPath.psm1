@@ -44,7 +44,7 @@ function Get-PathFromPlacemarkNode {
         if (-not $coordinatesNode) {
             return
         }
-        [string[]]$coordinateLines = $coordinatesNode.InnerText | Get-TrimmedLines
+        [string[]]$coordinateLines = $coordinatesNode.InnerText | Get-Lines -Trim
         [PSCustomObject[]]$coordinatePairs = $coordinateLines | Get-CoordinatePair
         [PSCustomObject]@{
             Coordinates = $coordinatePairs
@@ -56,21 +56,25 @@ function Get-AllPathsFromKml {
     [CmdletBinding()]
     [OutputType([PSCustomObject[]])]
     param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
-        [Alias("PSPath")]
+        [Parameter(Mandatory=$true, ParameterSetName="ByItem", Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [ValidateNotNullOrEmpty()]
+        [psobject]$KmlItem,
+        [Parameter(Mandatory=$true, ParameterSetName="ByPath", Position=0, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
         [ValidateNotNullOrEmpty()]
         [string]$KmlPath
     )
     process {
-        $kmlItem = Get-Item $KmlPath
-        [xml]$kmlXml = $kmlItem | Get-Content
+        if ($PSCmdlet.ParameterSetName -eq "ByPath") {
+            $KmlItem = Get-Item $KmlPath
+        }
+        [xml]$kmlXml = $KmlItem | Get-Content
         $nodes = $kmlXml.SelectNodes("/kml/Document/Folder/Placemark")
         if ($nodes.Count -lt 1) {
             Write-Warning "KML file '$_' does not contain any placemark XML nodes."
             return
         }
 
-        foreach ($item in $NodeList) {
+        foreach ($item in $nodes) {
             $item | Get-PathFromPlacemarkNode
         }
     }

@@ -7,61 +7,6 @@ $MinRadiansLatitude = -$MaxRadiansLatitude
 $MaxDegreesLatitude = Convert-RadiansToDegrees $MaxRadiansLatitude
 $MinDegreesLatitude = Convert-RadiansToDegrees $MinRadiansLatitude
 
-function Add-MapTileAliasMembers {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true, Position=0)]
-        [PSCustomObject]$Tile,
-        [Parameter()]
-        [switch]$Force,
-        [Parameter()]
-        [switch]$PassThru
-    )
-    process {
-        $Tile | Add-Member -MemberType AliasProperty `
-            -Name X -Value TileX -Force:$Force
-        $Tile | Add-Member -MemberType AliasProperty `
-            -Name Y -Value TileY -Force:$Force
-        $Tile | Add-Member -MemberType AliasProperty `
-            -Name Z -Value ZoomLevel -Force:$Force
-        if (-not (Get-Member -InputObject $Tile TileName)) {
-            $Tile | Add-Member -MemberType NoteProperty `
-                -Name TileName -Value ($Tile | Get-MapTileName)
-        }
-        $Tile | Add-Member -MemberType AliasProperty `
-            -Name Name -Value TileName -Force:$Force
-        if ($PassThru) {
-            $Tile
-        }
-    }
-}
-
-function New-MapTileObject {
-    [CmdletBinding()]
-    [OutputType([PSCustomObject])]
-    param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
-        [ValidateRange(0, 22)]
-        [Alias("Z")]
-        [int]$ZoomLevel,
-        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
-        [Alias("X")]
-        [int]$TileX,
-        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
-        [Alias("Y")]
-        [int]$TileY
-    )
-    process {
-        $tile = [PSCustomObject]@{
-            TileX = $TileX
-            TileY = $TileY
-            ZoomLevel = $ZoomLevel
-        }
-        Add-MapTileAliasMembers $tile -PassThru
-    }
-}
-Export-ModuleMember -Function New-MapTileObject
-
 function Get-MapTileName {
     [CmdletBinding()]
     [OutputType([string])]
@@ -88,6 +33,195 @@ function Get-MapTileName {
     }
 }
 Export-ModuleMember -Function Get-MapTileName
+
+function Add-MapTileMembers {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [ValidateNotNull]
+        [PSCustomObject]$InputObject,
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
+        [ValidateRange(0, 22)]
+        [Alias("Z")]
+        [int]$ZoomLevel,
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
+        [Alias("X")]
+        [int]$TileX,
+        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Y")]
+        [int]$TileY,
+        [Parameter()]
+        [switch]$Force,
+        [Parameter()]
+        [switch]$PassThru
+    )
+    process {
+        $InputObject | Add-Member @{
+            TileX = $TileX
+            TileY = $TileY
+            ZoomLevel = $ZoomLevel
+        } -Force:$Force
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name X -Value TileX -Force:$Force
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name Y -Value TileY -Force:$Force
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name Z -Value ZoomLevel -Force:$Force
+        if (-not (Get-Member -InputObject $InputObject TileName)) {
+            $InputObject | Add-Member -MemberType NoteProperty `
+                -Name TileName -Value ($InputObject | Get-MapTileName)
+        }
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name Name -Value TileName -Force:$Force
+        if ($PassThru) {
+            $Tile
+        }
+    }
+}
+
+function Get-MapTileJoinedName {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param (
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
+        [ValidateRange(0, 22)]
+        [Alias("Z")]
+        [int]$ZoomLevel,
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
+        [Alias("X")]
+        [int]$TileX,
+        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Y")]
+        [int]$TileY,
+        [Parameter(Mandatory=$true, Position=3, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Width")][Alias("W")]
+        [int]$TileWidth,
+        [Parameter(Mandatory=$true, Position=4, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Height")][Alias("H")]
+        [int]$TileHeight
+    )
+    begin {
+        $invariant = [System.Globalization.CultureInfo]::InvariantCulture
+    }
+    process {
+        $n = Get-MapTileName -ZoomLevel $ZoomLevel -TileX $TileX -TileY $TileY `
+            -ErrorAction Stop
+        $w = $TileWidth.ToString($invariant)
+        $h = $TileHeight.ToString($invariant)
+        "$n-w$w-h$h"
+    }
+}
+Export-ModuleMember -Function Get-MapTileJoinedName
+
+function Add-MapTileJoinedMembers {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [ValidateNotNull]
+        [PSCustomObject]$InputObject,
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
+        [ValidateRange(0, 22)]
+        [Alias("Z")]
+        [int]$ZoomLevel,
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
+        [Alias("X")]
+        [int]$TileX,
+        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Y")]
+        [int]$TileY,
+        [Parameter(Mandatory=$true, Position=3, ValueFromPipelineByPropertyName=$true)]
+        [Alias("W")]
+        [int]$TileWidth,
+        [Parameter(Mandatory=$true, Position=4, ValueFromPipelineByPropertyName=$true)]
+        [Alias("H")]
+        [int]$TileHeight,
+        [Parameter()]
+        [switch]$Force,
+        [Parameter()]
+        [switch]$PassThru
+    )
+    process {
+        $InputObject | Add-MapTileMembers -ZoomLevel $ZoomLevel `
+            -TileX $TileX -TileY $TileY -Force:$Force
+        $InputObject | Add-Member @{
+            TileWidth = $TileWidth
+            TileHeight = $TileHeight
+        } -Force:$Force
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name W -Value TileWidth -Force:$Force
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name H -Value TileHeight -Force:$Force
+        $InputObject | Add-Member -MemberType NoteProperty `
+            -Name TileName -Value ($InputObject | Get-MapTileJoinedName) -Force
+        $InputObject | Add-Member -MemberType AliasProperty `
+            -Name Name -Value TileName -Force
+        if ($PassThru) {
+            $InputObject
+        }
+    }
+}
+
+function New-MapTileObject {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
+        [ValidateRange(0, 22)]
+        [Alias("Z")]
+        [int]$ZoomLevel,
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
+        [Alias("X")]
+        [int]$TileX,
+        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
+        [Alias("Y")]
+        [int]$TileY
+    )
+    process {
+        $tile = New-Object PSCustomObject
+        Add-MapTileMembers -ZoomLevel $ZoomLevel -TileX $TileX -TileY $TileY `
+            -InputObject $tile -PassThru
+    }
+}
+Export-ModuleMember -Function New-MapTileObject
+
+function New-MapTileJoinedObject {
+    [CmdletBinding()]
+    [OutputType([PSCustomObject])]
+    param (
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName="ByTileParameters", ValueFromPipelineByPropertyName=$true)]
+        [ValidateRange(0, 22)]
+        [Alias("Z")]
+        [int]$ZoomLevel,
+        [Parameter(Mandatory=$true, Position=1, ParameterSetName="ByTileParameters", ValueFromPipelineByPropertyName=$true)]
+        [Alias("X")]
+        [int]$TileX,
+        [Parameter(Mandatory=$true, Position=2, ParameterSetName="ByTileParameters", ValueFromPipelineByPropertyName=$true)]
+        [Alias("Y")]
+        [int]$TileY,
+        [Parameter(Mandatory=$true, Position=3, ParameterSetName="ByTileParameters", ValueFromPipelineByPropertyName=$true)]
+        [Alias("W")]
+        [int]$TileWidth,
+        [Parameter(Mandatory=$true, Position=4, ParameterSetName="ByTileParameters", ValueFromPipelineByPropertyName=$true)]
+        [Alias("H")]
+        [int]$TileHeight,
+        [Parameter(ValueFromPipelineByPropertyName=$true, ParameterSetName="ByTilesArray")]
+        [AllowNull()][AllowEmptyCollection()]
+        [PSCustomObject[,]]$Tiles
+    )
+    process {
+        $tile = New-Object PSCustomObject
+        switch ($PSCmdlet.ParameterSetName) {
+            "ByTileParameters" {
+                $tile | Add-MapTileJoinedMembers -ZoomLevel $ZoomLevel `
+                    -TileX $TileX -TileY $TileY `
+                    -TileWidth $TileWidth -TileHeight $TileHeight `
+                    -PassThru
+            }
+            "ByTilesArray" {
+            }
+        }
+    }
+}
 
 function Get-MapTileFromPoint {
     [CmdletBinding()]
@@ -152,36 +286,6 @@ function Get-MapTileFromPoint {
 }
 Export-ModuleMember -Function Get-MapTileFromPoint
 
-function Add-MapTileMembers {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
-        [ValidateRange(0, 22)]
-        [int]$ZoomLevel,
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
-        [ValidateNotNull()]
-        [PSCustomObject]$Point,
-        [Parameter()]
-        [switch]$Force,
-        [Parameter()]
-        [switch]$PassThru
-    )
-    process {
-        $tile = $Point | Get-MapTileFromPoint -ZoomLevel $ZoomLevel
-        $Point | Add-Member @{
-            ZoomLevel = $tile.ZoomLevel
-            TileX = $tile.TileX
-            TileY = $tile.TileY
-            TileName = $tile.TileName
-        } -Force:$Force
-        Add-MapTileAliasMembers $Point -Force:$Force
-        if ($PassThru) {
-            $Point
-        }
-    }
-}
-Export-ModuleMember -Function Add-MapTileMembers
-
 function Get-MapTilesAlongPath {
     [CmdletBinding()]
     [OutputType([PSCustomObject[]])]
@@ -217,24 +321,17 @@ function Get-MapTilesAlongPath {
                 continue
             }
             $bresenhamPaths.Add([PSCustomObject]@{
-                X0 = $previousTile["TileX"]
-                Y0 = $previousTile["TileY"]
-                X1 = $currentTile["TileX"]
-                Y1 = $currentTile["TileY"]
+                X0 = $previousTile.TileX
+                Y0 = $previousTile.TileY
+                X1 = $currentTile.TileX
+                Y1 = $currentTile.TileY
             }) | Out-Null
             $previousTile = $currentTile
         }
         $bresenhamTiles = $bresenhamPaths.ToArray() | Get-BresenhamLineCoordinates `
             -UsedCoordinates $UsedCoordinates
         foreach ($item in $bresenhamTiles) {
-
-            [PSCustomObject]@{
-                ZoomLevel = $ZoomLevel
-                TileX = $item.X
-                TileY = $item.Y
-                TileName = Get-MapTileName -ZoomLevel $ZoomLevel `
-                    -TileX $item.X -TileY $item.Y
-            }
+            New-MapTileObject -ZoomLevel $ZoomLevel -TileX $item.X -TileY $item.Y
         }
     }
 }
@@ -256,7 +353,7 @@ function Get-MapTilesAdjacent {
         [int]$TileY,
         [Parameter(Mandatory=$true, Position=3, ValueFromPipelineByPropertyName=$true)]
         [Alias("Name")]
-        [int]$TileName,
+        [string]$TileName,
         [Parameter()]
         [ValidateRange(0, [int]::MaxValue)]
         [int]$TileRadius = 0,
@@ -275,7 +372,7 @@ function Get-MapTilesAdjacent {
     process {
         if ($TileRadius -lt 1) {
             if ($UsedCoordinates.Add($TileName)) {
-                $MapTile
+                New-MapTileObject -ZoomLevel $ZoomLevel -TileX $TileX -TileY $TileY
             }
             return
         }
@@ -287,58 +384,19 @@ function Get-MapTilesAdjacent {
             for ($y = $yCenter - ($TileRadius - 1); $y -le $yMax; $y++) {
                 if (($x -eq $xCenter) -and ($y -eq $yCenter)) {
                     if ($UsedCoordinates.Add($TileName)) {
-                        $MapTile
+                        New-MapTileObject -ZoomLevel $ZoomLevel -TileX $TileX -TileY $TileY
                     }
                     continue
                 }
-                $name = Get-MapTileName -ZoomLevel $ZoomLevel -TileX $x -TileY $y
-                if ($UsedCoordinates.Add($name)) {
-                    [PSCustomObject]@{
-                        ZoomLevel = $ZoomLevel
-                        TileX = $x
-                        TileY = $y
-                        TileName = $name
-                    }
+                $tile = New-MapTileObject -ZoomLevel $ZoomLevel -TileX $x -TileY $y
+                if ($UsedCoordinates.Add($tile.TileName)) {
+                    $tile
                 }
             }
         }
     }
 }
 Export-ModuleMember -Function Get-MapTilesAdjacent
-
-function Get-MapTileJoinedName {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param (
-        [Parameter(Mandatory=$true, Position=0, ValueFromPipelineByPropertyName=$true)]
-        [ValidateRange(0, 22)]
-        [Alias("Z")]
-        [int]$ZoomLevel,
-        [Parameter(Mandatory=$true, Position=1, ValueFromPipelineByPropertyName=$true)]
-        [Alias("X")]
-        [int]$TileX,
-        [Parameter(Mandatory=$true, Position=2, ValueFromPipelineByPropertyName=$true)]
-        [Alias("Y")]
-        [int]$TileY,
-        [Parameter(Mandatory=$true, Position=3, ValueFromPipelineByPropertyName=$true)]
-        [Alias("Width")][Alias("W")]
-        [int]$TileWidth,
-        [Parameter(Mandatory=$true, Position=4, ValueFromPipelineByPropertyName=$true)]
-        [Alias("Height")][Alias("H")]
-        [int]$TileHeight
-    )
-    begin {
-        $invariant = [System.Globalization.CultureInfo]::InvariantCulture
-    }
-    process {
-        $n = Get-MapTileName -ZoomLevel $ZoomLevel -TileX $TileX -TileY $TileY `
-            -ErrorAction Stop
-        $w = $TileWidth.ToString($invariant)
-        $h = $TileHeight.ToString($invariant)
-        "$n-w$w-h$h"
-    }
-}
-Export-ModuleMember -Function Get-MapTileJoinedName
 
 function Get-MapTilesJoined {
     [OutputType([PSCustomObject[]])]
@@ -347,12 +405,7 @@ function Get-MapTilesJoined {
         [ValidateNotNull()]
         [PSCustomObject[]]$MapTiles,
         [Parameter(Position=1)]
-        [ValidateScript({
-            if ($_ -lt 0) {
-                throw "Cannot validate argument on parameter 'TileRadius'. The $_ argument is less than the minimum allowed range of 0. Supply an argument that is greater than or equal to 0 and then try the command again."
-            }
-            $true
-        })]
+        [ValidateRange(0, [int]::MaxValue)]
         [int]$TileRadius = 0
     )
     $available = [System.Collections.Generic.Dictionary[string, PSCustomObject]]::new(
@@ -379,22 +432,59 @@ function Get-MapTilesJoined {
         $xExhausted = $false
         $yExhausted = $false
         $usedCoordinates.Add($item.TileName) | Out-Null
+        $startExtent = 1
         $singleTiles[0, 0] = $item
         $width = 1
         $height = 1
-        for ($extent = 1; $extent -lt $diameter; $extent++) {
+        if ($TileRadius -gt 1) {
+            # Fill upper left corner if available
+            $nwTileName = Get-MapTileName -ZoomLevel $item.ZoomLevel `
+                -TileX ($item.TileX - 1) -TileY ($item.TileY - 1)
+            $nwAvailable = $available.ContainsKey($nwTileName)
+            if ($nwAvailable) {
+                $singleTiles[0, 0] = $available[$nwTileName]
+            }
+            $nnTileName = Get-MapTileName -ZoomLevel $item.ZoomLevel `
+                -TileX $item.TileX -TileY ($item.TileY - 1)
+            $nnAvailable = $available.ContainsKey($nnTileName)
+            if ($nnAvailable) {
+                $singleTiles[1, 0] = $available[$nnTileName]
+            }
+            $wwTileName = Get-MapTileName -ZoomLevel $item.ZoomLevel `
+                -TileX $item.TileX -TileY ($item.TileY - 1)
+            $wwAvailable = $available.ContainsKey($wwTileName)
+            if ($wwAvailable) {
+                $singleTiles[0, 1] = $available[$wwTileName]
+            }
+            if ($nnAvailable -and $wwAvailable -and $nwAvailable) {
+                $singleTiles[1, 1] = $item
+                $width = 2
+                $height = 2
+                $startExtent = 2
+
+                $usedCoordinates.Add($nwTileName) | Out-Null
+                $usedCoordinates.Add($nnTileName) | Out-Null
+                $usedCoordinates.Add($wwTileName) | Out-Null
+            }
+        }
+        for ($extent = $startExtent; $extent -lt $diameter; $extent++) {
             $xExtent = $item.TileX + $extent
             $yExtent = $item.TileY + $extent
             if (-not $xExhausted) {
                 $x = $xExtent
                 $lineTileNames.Clear()
+                $overlapCount = 0
                 for ($offset = 0; $offset -lt $height; $offset++) {
                     $y = $Item.TileY + $offset
                     $name = Get-MapTileName -ZoomLevel $Item.ZoomLevel `
                         -TileX $x -TileY $y
-                    if ((-not $available.ContainsKey($name)) -or ($usedCoordinates.Contains($name))) {
+                    $isAvailable = -not $available.ContainsKey($name)
+                    $isUsedTile = $usedCoordinates.Contains($name)
+                    if (-not $isAvailable) {
                         $xExhausted = $true
                         break
+                    } elseif ($isUsedTile) {
+                        $overlapCount++
                     }
                     $singleTiles[$extent, $offset] = $available[$name]
                     $lineTileNames.Add($name) | Out-Null
@@ -403,17 +493,25 @@ function Get-MapTilesJoined {
                     $width++
                     $usedCoordinates.UnionWith($lineTileNames) | Out-Null
                 }
+                if ($overlapCount -eq $height) {
+                    $xExhausted = $true
+                }
             }
             if (-not $yExhausted) {
                 $y = $yExtent
                 $lineTileNames.Clear()
+                $overlapCount = 0
                 for ($offset = 0; $offset -lt $width; $offset++) {
                     $x = $item.TileX + $offset
                     $name = Get-MapTileName -ZoomLevel $Item.ZoomLevel `
                         -TileX $x -TileY $y
-                    if ((-not $available.ContainsKey($name)) -or ($usedCoordinates.Contains($name))) {
+                    $isAvailable = -not $available.ContainsKey($name)
+                    $isUsedTile = $usedCoordinates.Contains($name)
+                    if (-not $isAvailable) {
                         $yExhausted = $true
                         break
+                    } elseif ($isUsedTile) {
+                        $overlapCount++
                     }
                     $singleTiles[$offset, $extent] = $available[$name]
                     $lineTileNames.Add($name) | Out-Null
@@ -422,6 +520,12 @@ function Get-MapTilesJoined {
                     $height++
                     $usedCoordinates.UnionWith($lineTileNames) | Out-Null
                 }
+                if ($overlapCount -eq $width) {
+                    $yExhausted = $true
+                }
+            }
+            if ($xExhausted -and $yExhausted) {
+                break
             }
         }
         $joinTiles = [PSCustomObject[,]]::new($width, $height)
