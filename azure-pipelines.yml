@@ -1,35 +1,46 @@
-name: build-$(Build.BuildId)-date-$(Date:yyyy-MM-dd)
+name: $(Date:yyyy-MM-dd)-rev$(Rev:r)
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+    - rel/*
+pr:
+- '*'
+resources:
+  repositories:
+  - repository: templates
+    type:       github
+    name:       thnetii/azure-pipelines
+    endpoint:   couven92
 jobs:
-  - job: PowerShellPesterJob
-    displayName: PowerShell Pester Test Runner
-    pool: Hosted VS2017
-    steps:
-    - powershell: |
-        Import-Module Pester
-        $pesterModule = Get-Module Pester
-        if ($pesterModule.Version -lt [version]::Parse("4.0")) {
-            Install-Module -Name Pester -Verbose -Force -SkipPublisherCheck -Scope CurrentUser
-            Import-Module Pester -Force; }
-      displayName: 'Install-Module Pester'
-    - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
-      displayName: 'Invoke-Pester'
+- job: PowerShellPesterJob
+  displayName: PowerShell Pester Test Runner
+  steps:
+  - task: PowerShell@2
+    displayName: Invoke-Pester
+    inputs:
+      targetType:   filePath
+      filePath:     $(Build.SourcesDirectory)/scripts/run-pester.ps1
+      arguments:    -Install -Verbose
+      ignoreLASTEXITCODE: true
+    continueOnError:      true
+  - task: PublishTestResults@2
+    displayName: Publish Test Results
+    inputs:
+      searchFolder: $(Common.TestResultsDirectory)
+      testRunTitle: $(Build.BuildNumber)
+      testResultsFiles: '**/TEST-*.xml'
+      testResultsFormat: NUnit
+      buildPlatform: $(Agent.OS)-$(Agent.OSArchitecture)
+      buildConfiguration: $(Build.DefinitionName)
+- template: templates/dotnetcore/azure-pipelines.yml@templates
+  parameters:
+    checkout:
+    - checkout:   self
+      submodules: true
+    presteps:
+    - task: UseDotNet@2
+      displayName:  Use .NET Core SDK version 3.x
       inputs:
-        scriptFolder: $(Build.SourcesDirectory)/test/*
-        resultsFile: $(Common.TestResultsDirectory)/TEST-pester-$(Build.BuildNumber).xml
-        CodeCoverageFolder: $(Build.SourcesDirectory)/src
-        CodeCoverageOutputFile: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
-      continueOnError: true
-    - task: PublishTestResults@2
-      displayName: Publish Test Results
-      inputs:
-        searchFolder: $(Common.TestResultsDirectory)
-        testRunTitle: $(Build.BuildNumber)
-        testResultsFiles: '**/TEST-*.xml'
-        testResultsFormat: NUnit
-        buildPlatform: $(Agent.OS)-$(Agent.OSArchitecture)
-        buildConfiguration: $(Build.DefinitionName)
-    - task: PublishCodeCoverageResults@1
-      displayName: Publish Code Coverage Results
-      inputs:
-        codeCoverageTool: JaCoCo
-        summaryFileLocation: $(Common.TestResultsDirectory)/COVERAGE-pester-$(Build.BuildNumber).xml
+        version:    3.x

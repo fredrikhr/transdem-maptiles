@@ -1,24 +1,39 @@
 [CmdletBinding()]
-param ()
+param (
+    [switch]$Install = $false
+)
 
-$pesterTestPath = Join-Path (Join-Path $PSScriptRoot "..") "test"
+if ([string]::IsNullOrWhiteSpace($Env:BUILD_SOURCESDIRECTORY)) {
+    $pesterTestPath = Join-Path (Join-Path $PSScriptRoot "..") "test"
+}
+else {
+    $pesterTestPath = Join-Path $Env:BUILD_SOURCESDIRECTORY "test"
+}
 $pesterTestPath = Join-Path $pesterTestPath "*"
 
-$dtNow = [datetime]::UtcNow
-$dateString = $dtNow.ToString("yyyy'-'MM'-'dd")
-$timeString = $dtNow.ToString("HH'-'mm'-'ss")
-$outputFileName = "TEST-date-$dateString-utc-$timeString.xml"
-$outputDirectory = Join-Path (Join-Path $PSScriptRoot "..") "TestResult"
+if ([string]::IsNullOrWhiteSpace($Env:COMMON_TESTRESULTSDIRECTORY)) {
+    $outputDirectory = Join-Path (Join-Path $PSScriptRoot "..") "TestResult"
+}
+else {
+    $outputDirectory = Join-Path $Env:COMMON_TESTRESULTSDIRECTORY "TestResult"
+}
+if ([string]::IsNullOrWhiteSpace($Env:BUILD_BUILDNUMBER)) {
+    $dtNow = [datetime]::UtcNow
+    $dateString = $dtNow.ToString("yyyy'-'MM'-'dd")
+    $timeString = $dtNow.ToString("HH'-'mm'-'ss")
+    $outputFileName = "TEST-pester-$dateString-utc-$timeString.xml"
+}
+else {
+    $outputFileName = "TEST-pester-$Env:BUILD_BUILDNUMBER.xml"
+}
 if (-not (Test-Path $outputDirectory)) {
     New-Item -ItemType Directory $outputDirectory | Out-Null
 }
 $outputFilePath = Join-Path $outputDirectory $outputFileName
 
-Import-Module Pester -Verbose:$false
-$pesterModule = Get-Module Pester
-if ($pesterModule.Version -lt [version]::Parse("4.0")) {
+if ($Install) {
     Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
-    Import-Module Pester -Force -Verbose:$false
 }
+Import-Module Pester -Force
 Invoke-Pester -Script $pesterTestPath -EnableExit -OutputFormat NUnitXml `
     -OutputFile $outputFilePath
