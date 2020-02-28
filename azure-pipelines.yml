@@ -17,8 +17,13 @@ jobs:
 - job: PowerShellPesterJob
   displayName: PowerShell Pester Test Runner
   steps:
-  - pwsh: $(Build.SourcesDirectory)/scripts/run-pester.ps1 -Verbose
+  - task: PowerShell@2
     displayName: Invoke-Pester
+    inputs:
+      targetType:   'filePath'
+      filePath:     $(Build.SourcesDirectory)/scripts/run-pester.ps1
+      arguments:    -Verbose
+      ignoreLASTEXITCODE: true
   - task: PublishTestResults@2
     displayName: Publish Test Results
     inputs:
