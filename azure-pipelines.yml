@@ -24,6 +24,7 @@ jobs:
       filePath:     $(Build.SourcesDirectory)/scripts/run-pester.ps1
       arguments:    -Install -Verbose
       ignoreLASTEXITCODE: true
+    continueOnError:      true
   - task: PublishTestResults@2
     displayName: Publish Test Results
     inputs:
