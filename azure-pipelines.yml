@@ -14,6 +14,20 @@ resources:
     name:       thnetii/azure-pipelines
     endpoint:   couven92
 jobs:
+- job: PowerShellPesterJob
+  displayName: PowerShell Pester Test Runner
+  steps:
+  - pwsh: $(Build.SourcesDirectory)/scripts/run-pester.ps1
+    displayName: Invoke-Pester
+  - task: PublishTestResults@2
+    displayName: Publish Test Results
+    inputs:
+      searchFolder: $(Common.TestResultsDirectory)
+      testRunTitle: $(Build.BuildNumber)
+      testResultsFiles: '**/TEST-*.xml'
+      testResultsFormat: NUnit
+      buildPlatform: $(Agent.OS)-$(Agent.OSArchitecture)
+      buildConfiguration: $(Build.DefinitionName)
 - template: templates/dotnetcore/azure-pipelines.yml@templates
   parameters:
     checkout:
