@@ -17,6 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{009FB423-6E94-4DA1-B7D9-3F3B2A23686C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Couven92.TransdemMaptiles.Test", "test\Couven92.TransdemMaptiles.Test\Couven92.TransdemMaptiles.Test.csproj", "{2C8F7E12-685C-4634-B327-33DF6683F15B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,5 +35,22 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C07EC28F-F8C7-42DB-88E2-A2A40E9EBE16}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Debug|x64.Build.0 = Debug|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Debug|x86.Build.0 = Debug|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Release|x64.ActiveCfg = Release|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Release|x64.Build.0 = Release|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Release|x86.ActiveCfg = Release|Any CPU
+		{2C8F7E12-685C-4634-B327-33DF6683F15B}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2C8F7E12-685C-4634-B327-33DF6683F15B} = {009FB423-6E94-4DA1-B7D9-3F3B2A23686C}
 	EndGlobalSection
 EndGlobal
