@@ -27,7 +27,7 @@ if (-not (Test-Path $outputDirectory)) {
 }
 $outputFilePath = Join-Path $outputDirectory $outputFileName
 
-Import-Module Pester
+Import-Module Pester -ErrorAction Continue
 $pesterModule = Get-Module Pester
 if ($pesterModule.Version -lt [version]::Parse("4.0")) {
     Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser

@@ -17,7 +17,7 @@ jobs:
 - job: PowerShellPesterJob
   displayName: PowerShell Pester Test Runner
   steps:
-  - pwsh: $(Build.SourcesDirectory)/scripts/run-pester.ps1
+  - pwsh: $(Build.SourcesDirectory)/scripts/run-pester.ps1 -Verbose
     displayName: Invoke-Pester
   - task: PublishTestResults@2
     displayName: Publish Test Results
