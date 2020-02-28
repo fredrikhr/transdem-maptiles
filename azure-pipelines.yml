@@ -20,9 +20,9 @@ jobs:
   - task: PowerShell@2
     displayName: Invoke-Pester
     inputs:
-      targetType:   'filePath'
+      targetType:   filePath
       filePath:     $(Build.SourcesDirectory)/scripts/run-pester.ps1
-      arguments:    -Verbose
+      arguments:    -Install -Verbose
       ignoreLASTEXITCODE: true
   - task: PublishTestResults@2
     displayName: Publish Test Results
